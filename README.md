@@ -328,7 +328,7 @@ BUILD SUCCESS
 
 # 9. Evidencias del Funcionamiento
 
-Para el informe y exposición se incluyen capturas de:
+
 
 - Backend ejecutándose en IntelliJ
 - Endpoints probados en Postman
@@ -355,9 +355,9 @@ Importar en MySQL antes de ejecutar el backend.
 
 # 11. Integrantes
 
-- Tu Nombre
-- Compañero 1
-- Compañero 2
+- Benjamin Correa
+- Jaime Guevara
+- Gustavo Asencios
 
 ---
 
