@@ -3,12 +3,12 @@ package com.smartparking.backend.dto;
 public class AuthResponse {
 
     private String token;
-    private String email;
+    private UsuarioResponse usuario;
     private String rol;
 
-    public AuthResponse(String token, String email, String rol) {
+    public AuthResponse(String token, UsuarioResponse usuario, String rol) {
         this.token = token;
-        this.email = email;
+        this.usuario = usuario;
         this.rol = rol;
     }
 
@@ -16,11 +16,24 @@ public class AuthResponse {
         return token;
     }
 
-    public String getEmail() {
-        return email;
+    public UsuarioResponse getUsuario() {
+        return usuario;
     }
 
     public String getRol() {
         return rol;
+    }
+
+    // Getters de compatibilidad para no romper clientes que consumian el login anterior.
+    public Long getId() {
+        return usuario.getId();
+    }
+
+    public String getNombre() {
+        return usuario.getNombre();
+    }
+
+    public String getEmail() {
+        return usuario.getEmail();
     }
 }

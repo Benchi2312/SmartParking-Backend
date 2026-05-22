@@ -2,154 +2,375 @@
 
 ## 1. Descripción del Proyecto
 
-Este proyecto corresponde al backend del sistema Smart Parking, desarrollado con Spring Boot.  
-Permite la gestión de usuarios mediante autenticación, registro y control de roles (ADMIN y USER).
+Este proyecto corresponde al backend del sistema Smart Parking, desarrollado con Spring Boot.
+
+Permite la gestión de:
+
+- autenticación de usuarios
+- registro
+- control de roles (ADMIN y USER)
+- gestión de vehículos
+- gestión de espacios de estacionamiento
+- reservas
+- dashboard administrativo
 
 El sistema expone endpoints REST que son consumidos por un frontend desarrollado en Angular.
 
 ---
 
-## 2. Tecnologías Utilizadas
+# 2. Tecnologías Utilizadas
 
-- Java 17
+- Java 24
 - Spring Boot 4
 - Spring Web (REST API)
-- Spring Data JPA
+- Spring Data JPA / Hibernate
+- Spring Security
+- JWT Authentication
 - MySQL
-- Spring Security (encriptación de contraseñas con BCrypt)
+- BCrypt Password Encoder
 - Maven
 - JUnit y Mockito (pruebas unitarias)
 
 ---
 
-## 3. Estructura del Proyecto
+# 3. Arquitectura del Proyecto
 
 El proyecto sigue una arquitectura por capas:
 
+```text
 src/main/java/com/smartparking/backend/
+```
 
-- config/        → Configuración (SecurityConfig)
-- controller/    → Controladores REST (AuthController)
-- service/       → Interfaces de negocio
-- service/impl/  → Implementaciones de servicios
-- repository/    → Acceso a datos (JPA)
-- model/         → Entidades (Usuario)
-- dto/           → Objetos de transferencia (LoginRequest)
+## Estructura
+
+```text
+config/          -> Configuración general y seguridad
+controller/      -> Controladores REST
+service/         -> Interfaces de negocio
+service/impl/    -> Implementaciones de servicios
+repository/      -> Acceso a datos con JPA
+model/           -> Entidades JPA
+dto/             -> Objetos de transferencia
+security/        -> JWT y autenticación
+exception/       -> Manejo global de errores
+```
 
 ---
 
-## 4. Endpoints REST
+# 4. Funcionalidades Implementadas
 
-### 4.1 Registro de usuario
+## Autenticación y Seguridad
 
+- Registro de usuarios
+- Login con JWT
+- Contraseñas encriptadas con BCrypt
+- Roles ADMIN y USER
+- Protección de rutas
+
+---
+
+## Gestión de Vehículos
+
+El usuario puede:
+
+- registrar vehículos
+- editar vehículos
+- eliminar vehículos
+- visualizar sus vehículos
+
+---
+
+## Gestión de Espacios
+
+El administrador puede:
+
+- crear espacios
+- editar espacios
+- eliminar espacios
+- asignar espacios a vehículos
+- cambiar estados:
+  - LIBRE
+  - OCUPADO
+  - RESERVADO
+
+---
+
+## Reservas
+
+- creación de reservas
+- historial de reservas
+- visualización de espacios asignados
+
+---
+
+# 5. Endpoints REST Principales
+
+## 5.1 Registro de Usuario
+
+```http
 POST /api/auth/register
+```
 
-Request:
-{
-"nombre": "Juan",
-"email": "juan@gmail.com",
-"password": "123456"
-}
+### Request
 
-Response:
+```json
 {
-"id": 1,
-"nombre": "Juan",
-"email": "juan@gmail.com",
-"rol": "USER"
+  "nombre": "Juan",
+  "email": "juan@gmail.com",
+  "password": "123456"
 }
+```
+
+### Response
+
+```json
+{
+  "id": 1,
+  "nombre": "Juan",
+  "email": "juan@gmail.com",
+  "rol": "USER"
+}
+```
 
 ---
 
-### 4.2 Login
+## 5.2 Login
 
+```http
 POST /api/auth/login
+```
 
-Request:
-{
-"email": "admin",
-"password": "admin123"
-}
+### Request
 
-Response:
+```json
 {
-"id": 1,
-"nombre": "Admin",
-"email": "admin",
-"rol": "ADMIN"
+  "email": "admin@gmail.com",
+  "password": "admin123"
 }
+```
+
+### Response
+
+```json
+{
+  "token": "jwt_token",
+  "usuario": {
+    "id": 1,
+    "nombre": "Admin",
+    "email": "admin@gmail.com",
+    "rol": "ADMIN"
+  }
+}
+```
 
 ---
 
-### 4.3 Listar usuarios
+## 5.3 Vehículos
 
-GET /api/usuarios
+### Listar vehículos
 
-Response:
-[
-{
-"id": 1,
-"nombre": "Admin",
-"email": "admin",
-"rol": "ADMIN"
-}
-]
+```http
+GET /api/vehiculos
+```
+
+### Crear vehículo
+
+```http
+POST /api/vehiculos
+```
 
 ---
 
-## 5. Configuración y Ejecución
+## 5.4 Espacios
 
-### 5.1 Base de Datos
+### Listar espacios
 
-Configurar en application.properties:
+```http
+GET /api/espacios
+```
 
-spring.datasource.url=jdbc:mysql://localhost:3307/smart_parking  
-spring.datasource.username=root  
-spring.datasource.password=  
+### Crear espacio
+
+```http
+POST /api/espacios
+```
+
+---
+
+## 5.5 Reservas
+
+### Listar reservas
+
+```http
+GET /api/reservas
+```
+
+### Crear reserva
+
+```http
+POST /api/reservas
+```
+
+---
+
+# 6. Configuración y Ejecución
+
+## 6.1 Base de Datos
+
+Crear base de datos:
+
+```sql
+CREATE DATABASE smart_parking;
+```
+
+---
+
+## 6.2 Configuración application.properties
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3307/smart_parking
+spring.datasource.username=root
+spring.datasource.password=
+
 spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.port=8080
+```
+
+IMPORTANTE:
+
+Si MySQL usa otro puerto cambiar:
+
+```properties
+3307
+```
+
+por:
+
+```properties
+3306
+```
 
 ---
 
-### 5.2 Ejecutar el Proyecto
+# 7. Ejecutar el Proyecto
 
-Desde IntelliJ:
-- Ejecutar la clase BackendApplication
+## Desde IntelliJ
 
-Desde consola:
-mvn spring-boot:run
+Ejecutar:
+
+```text
+BackendApplication.java
+```
+
+---
+
+## Desde consola
+
+Windows:
+
+```bash
+.\mvnw.cmd spring-boot:run
+```
+
+Linux/Mac:
+
+```bash
+./mvnw spring-boot:run
+```
 
 Servidor:
+
+```text
 http://localhost:8080
+```
 
 ---
 
-## 6. Pruebas
+# 8. Pruebas
 
-Se implementaron pruebas unitarias usando JUnit y Mockito para validar:
+Se implementaron pruebas unitarias usando:
 
-- Registro de usuario
-- Login correcto
-- Validación de contraseña
+- JUnit
+- Mockito
 
-Ejecución:
-- Click derecho en la clase de test → Run
+Se validó:
+
+- registro de usuario
+- login correcto
+- validación de contraseña
+- generación de password BCrypt
+
+---
+
+## Ejecutar tests
+
+Windows:
+
+```bash
+.\mvnw.cmd test
+```
+
+Linux/Mac:
+
+```bash
+./mvnw test
+```
 
 Resultado esperado:
+
+```text
 BUILD SUCCESS
+```
 
 ---
 
-## 7. Evidencias del Funcionamiento
+# 9. Evidencias del Funcionamiento
 
-Para el informe se incluyen capturas de:
 
-- Proyecto ejecutándose en IntelliJ (log de Spring Boot)
-- Endpoints probados en Postman (respuestas 200 OK)
-- Base de datos con registros creados
-- Pruebas unitarias ejecutadas correctamente
+
+- Backend ejecutándose en IntelliJ
+- Endpoints probados en Postman
+- Base de datos MySQL con registros creados
+- Login y registro funcionando
+- CRUD de vehículos
+- CRUD de espacios
+- Dashboard admin y user
+- Tests ejecutados correctamente
 
 ---
 
-## 8. Autor
+# 10. Base de Datos
 
-Proyecto desarrollado como parte del curso de desarrollo backend con Spring Boot.
+Se incluye archivo:
+
+```text
+smart_parking.sql
+```
+
+Importar en MySQL antes de ejecutar el backend.
+
+---
+
+# 11. Integrantes
+
+- Benjamin Correa
+- Jaime Guevara
+- Gustavo Asencios
+
+---
+
+# 12. Estado Actual del Proyecto
+
+Actualmente el sistema cuenta con:
+
+- autenticación JWT funcional
+- roles ADMIN y USER
+- persistencia con JPA/Hibernate
+- CRUD de vehículos
+- CRUD de espacios
+- reservas básicas
+- dashboard administrativo
+- dashboard de usuario
+- seguridad con Spring Security
