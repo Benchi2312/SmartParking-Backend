@@ -24,6 +24,11 @@ public class EspacioController {
         return espacioService.listarTodos();
     }
 
+    @GetMapping("/disponibles")
+    public List<EspacioResponse> listarDisponibles() {
+        return espacioService.listarDisponibles();
+    }
+
     @PostMapping
     public EspacioResponse crear(@RequestBody EspacioRequest request) {
         return espacioService.crear(request);
@@ -39,5 +44,10 @@ public class EspacioController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         espacioService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/liberar")
+    public EspacioResponse liberar(@PathVariable Long id) {
+        return espacioService.liberar(id);
     }
 }

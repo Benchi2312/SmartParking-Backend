@@ -11,6 +11,7 @@ public class Vehiculo {
 
     private String marca;
     private String modelo;
+    @Column(unique = true)
     private String placa;
 
     @ManyToOne

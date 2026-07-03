@@ -2,358 +2,202 @@
 
 ## 1. Descripción del Proyecto
 
-Este proyecto corresponde al backend del sistema Smart Parking, desarrollado con Spring Boot.
+API REST del sistema Smart Parking, desarrollada con Spring Boot. Gestiona la lógica de negocio para estacionamientos inteligentes con autenticación JWT, roles y un flujo completo de reservas.
 
-Permite la gestión de:
+### Funcionalidades principales
 
-- autenticación de usuarios
-- registro
-- control de roles (ADMIN y USER)
-- gestión de vehículos
-- gestión de espacios de estacionamiento
-- reservas
-- dashboard administrativo
-
-El sistema expone endpoints REST que son consumidos por un frontend desarrollado en Angular.
+- Autenticación y registro de usuarios con JWT + BCrypt
+- Roles ADMIN y USER
+- CRUD de vehículos con validación de propietario
+- CRUD de espacios de estacionamiento
+- Asignación y liberación de espacios
+- Sistema de reservas (crear, aprobar, rechazar)
+- Dashboard con métricas
 
 ---
 
-# 2. Tecnologías Utilizadas
+## 2. Tecnologías Utilizadas
+
+| Tecnología | Versión |
+|---|---|
+| Java | 24 |
+| Spring Boot | 4 |
+| Spring Web MVC | - |
+| Spring Data JPA / Hibernate | - |
+| Spring Security | - |
+| JWT (jjwt) | 0.12 |
+| MySQL | 8+ |
+| BCrypt | - |
+| Maven | - |
+| JUnit 5 + Mockito | - |
+
+---
+
+## 3. Arquitectura del Proyecto
+
+Arquitectura por capas:
+
+```
+src/main/java/com/smartparking/backend/
+├── config/           → SecurityConfig, CorsConfig
+├── controller/       → AuthController, VehiculoController, EspacioController, ReservaController
+├── dto/              → Request/Response objects (AuthResponse, VehiculoRequest, etc.)
+├── exception/        → ApiExceptionHandler, ApiErrorResponse
+├── model/            → Entidades JPA (Usuario, Vehiculo, Espacio, Reserva, EstadoEspacio)
+├── repository/       → Repositorios JPA
+├── security/jwt/     → JwtService, JwtAuthenticationFilter, JwtAuthenticationEntryPoint
+└── service/
+    ├── UsuarioService, VehiculoService, EspacioService, ReservaService (interfaces)
+    └── impl/         → Implementaciones con lógica de negocio
+```
+
+---
+
+## 4. Endpoints REST
+
+### Autenticación
+
+| Método | Endpoint | Auth | Descripción |
+|---|---|---|---|
+| POST | `/api/auth/register` | No | Registro de usuario |
+| POST | `/api/auth/login` | No | Inicio de sesión |
+| GET | `/api/auth/usuarios` | JWT | Listar usuarios (admin) |
+
+### Vehículos
+
+| Método | Endpoint | Auth | Descripción |
+|---|---|---|---|
+| GET | `/api/vehiculos` | JWT | Listar vehículos (filtro por `?usuarioId=`) |
+| POST | `/api/vehiculos` | JWT | Crear vehículo |
+| PUT | `/api/vehiculos/{id}` | JWT | Actualizar vehículo (solo dueño o admin) |
+| DELETE | `/api/vehiculos/{id}` | JWT | Eliminar vehículo (solo dueño o admin) |
+
+### Espacios
+
+| Método | Endpoint | Auth | Descripción |
+|---|---|---|---|
+| GET | `/api/espacios` | JWT | Listar todos los espacios |
+| GET | `/api/espacios/disponibles` | JWT | Listar espacios libres |
+| POST | `/api/espacios` | JWT | Crear espacio |
+| PUT | `/api/espacios/{id}` | JWT | Actualizar espacio |
+| DELETE | `/api/espacios/{id}` | JWT | Eliminar espacio |
+| POST | `/api/espacios/{id}/liberar` | JWT | Liberar espacio |
+
+### Reservas
+
+| Método | Endpoint | Auth | Descripción |
+|---|---|---|---|
+| GET | `/api/reservas` | JWT | Listar reservas (filtro por `?usuarioId=`) |
+| GET | `/api/reservas/mis-reservas` | JWT | Reservas del usuario autenticado |
+| GET | `/api/reservas/pendientes` | JWT (ADMIN) | Reservas pendientes de aprobación |
+| POST | `/api/reservas` | JWT | Crear reserva |
+| POST | `/api/reservas/{id}/aprobar` | JWT (ADMIN) | Aprobar reserva |
+| POST | `/api/reservas/{id}/rechazar` | JWT (ADMIN) | Rechazar reserva |
+
+---
+
+## 5. Configuración y Ejecución
+
+### Requisitos
 
 - Java 24
-- Spring Boot 4
-- Spring Web (REST API)
-- Spring Data JPA / Hibernate
-- Spring Security
-- JWT Authentication
-- MySQL
-- BCrypt Password Encoder
-- Maven
-- JUnit y Mockito (pruebas unitarias)
+- MySQL 8+
+- Maven (incluye wrapper)
 
----
-
-# 3. Arquitectura del Proyecto
-
-El proyecto sigue una arquitectura por capas:
-
-```text
-src/main/java/com/smartparking/backend/
-```
-
-## Estructura
-
-```text
-config/          -> Configuración general y seguridad
-controller/      -> Controladores REST
-service/         -> Interfaces de negocio
-service/impl/    -> Implementaciones de servicios
-repository/      -> Acceso a datos con JPA
-model/           -> Entidades JPA
-dto/             -> Objetos de transferencia
-security/        -> JWT y autenticación
-exception/       -> Manejo global de errores
-```
-
----
-
-# 4. Funcionalidades Implementadas
-
-## Autenticación y Seguridad
-
-- Registro de usuarios
-- Login con JWT
-- Contraseñas encriptadas con BCrypt
-- Roles ADMIN y USER
-- Protección de rutas
-
----
-
-## Gestión de Vehículos
-
-El usuario puede:
-
-- registrar vehículos
-- editar vehículos
-- eliminar vehículos
-- visualizar sus vehículos
-
----
-
-## Gestión de Espacios
-
-El administrador puede:
-
-- crear espacios
-- editar espacios
-- eliminar espacios
-- asignar espacios a vehículos
-- cambiar estados:
-  - LIBRE
-  - OCUPADO
-  - RESERVADO
-
----
-
-## Reservas
-
-- creación de reservas
-- historial de reservas
-- visualización de espacios asignados
-
----
-
-# 5. Endpoints REST Principales
-
-## 5.1 Registro de Usuario
-
-```http
-POST /api/auth/register
-```
-
-### Request
-
-```json
-{
-  "nombre": "Juan",
-  "email": "juan@gmail.com",
-  "password": "123456"
-}
-```
-
-### Response
-
-```json
-{
-  "id": 1,
-  "nombre": "Juan",
-  "email": "juan@gmail.com",
-  "rol": "USER"
-}
-```
-
----
-
-## 5.2 Login
-
-```http
-POST /api/auth/login
-```
-
-### Request
-
-```json
-{
-  "email": "admin@gmail.com",
-  "password": "admin123"
-}
-```
-
-### Response
-
-```json
-{
-  "token": "jwt_token",
-  "usuario": {
-    "id": 1,
-    "nombre": "Admin",
-    "email": "admin@gmail.com",
-    "rol": "ADMIN"
-  }
-}
-```
-
----
-
-## 5.3 Vehículos
-
-### Listar vehículos
-
-```http
-GET /api/vehiculos
-```
-
-### Crear vehículo
-
-```http
-POST /api/vehiculos
-```
-
----
-
-## 5.4 Espacios
-
-### Listar espacios
-
-```http
-GET /api/espacios
-```
-
-### Crear espacio
-
-```http
-POST /api/espacios
-```
-
----
-
-## 5.5 Reservas
-
-### Listar reservas
-
-```http
-GET /api/reservas
-```
-
-### Crear reserva
-
-```http
-POST /api/reservas
-```
-
----
-
-# 6. Configuración y Ejecución
-
-## 6.1 Base de Datos
-
-Crear base de datos:
+### Base de datos
 
 ```sql
 CREATE DATABASE smart_parking;
 ```
 
----
-
-## 6.2 Configuración application.properties
+Configurar conexión en `src/main/resources/application.properties`:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3307/smart_parking
 spring.datasource.username=root
 spring.datasource.password=
-
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
-
 server.port=8080
 ```
 
-IMPORTANTE:
+> Hibernate crea las tablas automáticamente. No requiere scripts SQL.
 
-Si MySQL usa otro puerto cambiar:
-
-```properties
-3307
-```
-
-por:
-
-```properties
-3306
-```
-
----
-
-# 7. Ejecutar el Proyecto
-
-## Desde IntelliJ
-
-Ejecutar:
-
-```text
-BackendApplication.java
-```
-
----
-
-## Desde consola
-
-Windows:
+### Ejecutar
 
 ```bash
+# Windows
 .\mvnw.cmd spring-boot:run
-```
 
-Linux/Mac:
-
-```bash
+# Linux/Mac
 ./mvnw spring-boot:run
 ```
 
-Servidor:
+Servidor en: `http://localhost:8080`
 
-```text
-http://localhost:8080
+---
+
+## 6. Pruebas
+
+Se implementaron pruebas unitarias con JUnit 5 y Mockito:
+
+```
+5 tests ejecutados (BUILD SUCCESS)
 ```
 
----
+### Casos de prueba
 
-# 8. Pruebas
+| Clase | Prueba | Descripción |
+|---|---|---|
+| `BackendApplicationTests` | `contextLoads` | Contexto Spring Boot carga correctamente |
+| `UsuarioServiceTest` | `registrarGuardaPasswordEncriptado` | Password se guarda con BCrypt, rol asignado es USER |
+| `UsuarioServiceTest` | `loginCorrecto` | Login con credenciales válidas retorna usuario |
+| `BusinessRulesTest` | `actualizar_debeRechazarVehiculoQueNoPerteneceAlUsuarioAutenticado` | Usuario no puede editar vehículo ajeno |
+| `BusinessRulesTest` | `crearReserva_debeRechazarDuplicadosParaElMismoVehiculoYFecha` | No se permiten reservas duplicadas |
 
-Se implementaron pruebas unitarias usando:
-
-- JUnit
-- Mockito
-
-Se validó:
-
-- registro de usuario
-- login correcto
-- validación de contraseña
-- generación de password BCrypt
-
----
-
-## Ejecutar tests
-
-Windows:
+### Ejecutar tests
 
 ```bash
+# Windows
 .\mvnw.cmd test
-```
 
-Linux/Mac:
-
-```bash
+# Linux/Mac
 ./mvnw test
 ```
 
-Resultado esperado:
+---
 
-```text
-BUILD SUCCESS
-```
+## 7. Seguridad
+
+- Autenticación mediante JWT con 8 horas de expiración
+- Filtro `JwtAuthenticationFilter` que valida token en cada request
+- Contraseñas encriptadas con BCrypt
+- Normalización de roles (`ADMIN`, `USER`, `ROLE_ADMIN`, `ROLE_USER`)
+- Validación de propietario en servicios de vehículos y reservas
+- Entry point personalizado para errores 401
 
 ---
 
-# 9. Evidencias del Funcionamiento
+## 8. Base de Datos
 
+### Entidades JPA
 
+| Entidad | Tabla | Relaciones |
+|---|---|---|
+| `Usuario` | `usuario` | - |
+| `Vehiculo` | `vehiculo` | `@ManyToOne` → Usuario |
+| `Espacio` | `espacio` | `@ManyToOne` → Vehiculo |
+| `Reserva` | `reserva` | `@ManyToOne` → Usuario, Vehiculo, Espacio |
 
-- Backend ejecutándose en IntelliJ
-- Endpoints probados en Postman
-- Base de datos MySQL con registros creados
-- Login y registro funcionando
-- CRUD de vehículos
-- CRUD de espacios
-- Dashboard admin y user
-- Tests ejecutados correctamente
+### Estados de Espacio
 
----
-
-# 10. Base de Datos
-
-Se incluye archivo:
-
-```text
-smart_parking.sql
-```
-
-Importar en MySQL antes de ejecutar el backend.
+- `LIBRE` — Disponible para asignación
+- `OCUPADO` — Asignado a un vehículo
+- `RESERVADO` — Reservado pendiente de confirmación
 
 ---
 
-# 11. Integrantes
+## 9. Integrantes
 
 - Benjamin Correa
 - Jaime Guevara
@@ -361,16 +205,14 @@ Importar en MySQL antes de ejecutar el backend.
 
 ---
 
-# 12. Estado Actual del Proyecto
+## 10. Estado Actual
 
-Actualmente el sistema cuenta con:
-
-- autenticación JWT funcional
-- roles ADMIN y USER
-- persistencia con JPA/Hibernate
-- CRUD de vehículos
-- CRUD de espacios
-- reservas básicas
-- dashboard administrativo
-- dashboard de usuario
-- seguridad con Spring Security
+- Autenticación JWT funcional con registro y login
+- Roles ADMIN/USER operativos
+- CRUD completo de vehículos con validación de propietario
+- CRUD completo de espacios
+- Asignación de espacios con validación anti-duplicados
+- Sistema de reservas: creación, aprobación y rechazo
+- DTOs para todas las entidades principales
+- 5 tests unitarios ejecutándose correctamente
+- Integración total con frontend Angular

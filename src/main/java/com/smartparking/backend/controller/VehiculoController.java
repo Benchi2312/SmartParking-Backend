@@ -19,6 +19,11 @@ public class VehiculoController {
         this.vehiculoService = vehiculoService;
     }
 
+    @GetMapping("/mis-vehiculos")
+    public List<VehiculoResponse> listarMisVehiculos() {
+        return vehiculoService.listarMisVehiculos();
+    }
+
     @GetMapping
     public List<VehiculoResponse> listar(@RequestParam(required = false) Long usuarioId) {
         if (usuarioId == null) {

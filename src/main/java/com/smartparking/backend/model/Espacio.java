@@ -9,6 +9,7 @@ public class Espacio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String numero;
 
     @Enumerated(EnumType.STRING)

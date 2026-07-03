@@ -17,6 +17,8 @@ import java.util.List;
 @Service
 public class VehiculoServiceImpl implements VehiculoService {
 
+    private static final String PLACA_PERUANA_REGEX = "^[A-Z]{3}-\\d{3}$|^[A-Z]{2}-\\d{4}$";
+
     private final VehiculoRepository vehiculoRepository;
     private final UsuarioRepository usuarioRepository;
 
@@ -29,6 +31,15 @@ public class VehiculoServiceImpl implements VehiculoService {
     @Override
     public List<VehiculoResponse> listarTodos() {
         return vehiculoRepository.listarTodosConUsuario()
+                .stream()
+                .map(VehiculoResponse::fromVehiculo)
+                .toList();
+    }
+
+    @Override
+    public List<VehiculoResponse> listarMisVehiculos() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+        return vehiculoRepository.buscarPorUsuario(usuario.getId())
                 .stream()
                 .map(VehiculoResponse::fromVehiculo)
                 .toList();
@@ -87,6 +98,11 @@ public class VehiculoServiceImpl implements VehiculoService {
         Vehiculo vehiculo = vehiculoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado"));
 
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        if (!esAdmin() && (vehiculo.getUsuario() == null || !vehiculo.getUsuario().getId().equals(usuarioAutenticado.getId()))) {
+            throw new IllegalArgumentException("Solo puedes editar tus propios vehiculos");
+        }
+
         vehiculo.setMarca(request.getMarca().trim());
         vehiculo.setModelo(request.getModelo().trim());
         vehiculo.setPlaca(placa);
@@ -101,8 +117,12 @@ public class VehiculoServiceImpl implements VehiculoService {
             throw new IllegalArgumentException("El id del vehiculo es obligatorio");
         }
 
-        if (!vehiculoRepository.existsById(id)) {
-            throw new RuntimeException("Vehiculo no encontrado");
+        Vehiculo vehiculo = vehiculoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vehiculo no encontrado"));
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        if (!esAdmin() && (vehiculo.getUsuario() == null || !vehiculo.getUsuario().getId().equals(usuarioAutenticado.getId()))) {
+            throw new IllegalArgumentException("Solo puedes eliminar tus propios vehiculos");
         }
 
         vehiculoRepository.deleteById(id);
@@ -115,6 +135,11 @@ public class VehiculoServiceImpl implements VehiculoService {
 
         if (estaVacio(request.getPlaca())) {
             throw new IllegalArgumentException("La placa es obligatoria");
+        }
+
+        String placa = normalizarPlaca(request.getPlaca());
+        if (!placa.matches(PLACA_PERUANA_REGEX)) {
+            throw new IllegalArgumentException("Formato de placa invalido. Usa ABC-123 para autos o AB-1234 para motos");
         }
 
         if (estaVacio(request.getMarca())) {
@@ -143,5 +168,16 @@ public class VehiculoServiceImpl implements VehiculoService {
 
         return usuarioRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+    }
+
+    private boolean esAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 }
