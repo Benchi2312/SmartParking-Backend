@@ -4,6 +4,7 @@ import com.smartparking.backend.security.jwt.JwtAuthenticationEntryPoint;
 import com.smartparking.backend.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -40,6 +41,17 @@ public class SecurityConfig {
                         // Se permiten ambas rutas para cumplir el requerimiento y no romper la API actual /api/auth.
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        // Administracion de espacios: solo ADMIN puede crear, editar o eliminar
+                        .requestMatchers(HttpMethod.POST, "/api/espacios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/espacios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/espacios/**").hasRole("ADMIN")
+                        .requestMatchers("/api/espacios/*/liberar").hasRole("ADMIN")
+                        // Gestion de usuarios: solo ADMIN puede listar todos
+                        .requestMatchers("/api/auth/usuarios").hasRole("ADMIN")
+                        // Reservas: solo ADMIN puede ver pendientes, aprobar o rechazar
+                        .requestMatchers("/api/reservas/pendientes").hasRole("ADMIN")
+                        .requestMatchers("/api/reservas/*/aprobar").hasRole("ADMIN")
+                        .requestMatchers("/api/reservas/*/rechazar").hasRole("ADMIN")
                         .requestMatchers("/auth/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()

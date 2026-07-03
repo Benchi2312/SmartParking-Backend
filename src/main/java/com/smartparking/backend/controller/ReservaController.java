@@ -1,7 +1,7 @@
 package com.smartparking.backend.controller;
 
 import com.smartparking.backend.dto.ReservaRequest;
-import com.smartparking.backend.model.Reserva;
+import com.smartparking.backend.dto.ReservaResponse;
 import com.smartparking.backend.service.ReservaService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,7 @@ public class ReservaController {
     }
 
     @GetMapping
-    public List<Reserva> listar(@RequestParam(required = false) Long usuarioId) {
+    public List<ReservaResponse> listar(@RequestParam(required = false) Long usuarioId) {
         if (usuarioId == null) {
             return reservaService.listarTodos();
         }
@@ -27,8 +27,38 @@ public class ReservaController {
         return reservaService.listarPorUsuario(usuarioId);
     }
 
+    @GetMapping("/mis-reservas")
+    public List<ReservaResponse> listarMisReservas() {
+        return reservaService.listarMisReservas();
+    }
+
+    @GetMapping("/mis-reservas/ultima")
+    public ReservaResponse obtenerUltimaReserva() {
+        return reservaService.obtenerUltimaReserva();
+    }
+
+    @GetMapping("/pendientes")
+    public List<ReservaResponse> listarPendientes() {
+        return reservaService.listarPendientes();
+    }
+
     @PostMapping
-    public Reserva crear(@RequestBody ReservaRequest request) {
+    public ReservaResponse crear(@RequestBody ReservaRequest request) {
         return reservaService.crear(request);
+    }
+
+    @PutMapping("/{id}/estado")
+    public ReservaResponse cambiarEstado(@PathVariable Long id, @RequestBody ReservaRequest request) {
+        return reservaService.cambiarEstado(id, request.getEstado());
+    }
+
+    @PostMapping("/{id}/aprobar")
+    public ReservaResponse aprobar(@PathVariable Long id) {
+        return reservaService.aprobar(id);
+    }
+
+    @PostMapping("/{id}/rechazar")
+    public ReservaResponse rechazar(@PathVariable Long id) {
+        return reservaService.rechazar(id);
     }
 }

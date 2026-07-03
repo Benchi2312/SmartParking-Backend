@@ -12,7 +12,9 @@ public class Reserva {
     private Long id;
 
     private LocalDate fecha;
-    private String estado;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoReserva estado;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
@@ -21,6 +23,10 @@ public class Reserva {
     @ManyToOne
     @JoinColumn(name = "vehiculo_id")
     private Vehiculo vehiculo;
+
+    @ManyToOne
+    @JoinColumn(name = "espacio_id")
+    private Espacio espacio;
 
     public Long getId() {
         return id;
@@ -38,11 +44,11 @@ public class Reserva {
         this.fecha = fecha;
     }
 
-    public String getEstado() {
+    public EstadoReserva getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoReserva estado) {
         this.estado = estado;
     }
 
@@ -60,5 +66,13 @@ public class Reserva {
 
     public void setVehiculo(Vehiculo vehiculo) {
         this.vehiculo = vehiculo;
+    }
+
+    public Espacio getEspacio() {
+        return espacio;
+    }
+
+    public void setEspacio(Espacio espacio) {
+        this.espacio = espacio;
     }
 }

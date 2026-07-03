@@ -11,6 +11,7 @@ public class Usuario {
     private Long id;
 
     private String nombre;
+    @Column(unique = true)
     private String email;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;

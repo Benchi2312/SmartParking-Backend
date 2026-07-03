@@ -8,6 +8,7 @@ public class ReservaRequest {
     private String estado;
     private Long usuarioId;
     private Long vehiculoId;
+    private Long espacioId;
 
     public LocalDate getFecha() {
         return fecha;
@@ -39,5 +40,13 @@ public class ReservaRequest {
 
     public void setVehiculoId(Long vehiculoId) {
         this.vehiculoId = vehiculoId;
+    }
+
+    public Long getEspacioId() {
+        return espacioId;
+    }
+
+    public void setEspacioId(Long espacioId) {
+        this.espacioId = espacioId;
     }
 }
