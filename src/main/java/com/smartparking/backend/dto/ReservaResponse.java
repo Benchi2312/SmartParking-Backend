@@ -2,7 +2,9 @@ package com.smartparking.backend.dto;
 
 import com.smartparking.backend.model.Reserva;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReservaResponse {
 
@@ -13,12 +15,18 @@ public class ReservaResponse {
     private VehiculoResponse vehiculo;
     private EspacioResponse espacio;
     private String canceladoPor;
+    private LocalDateTime horaInicio;
+    private LocalDateTime horaFin;
+    private BigDecimal costoTotal;
 
     public ReservaResponse(Long id, LocalDate fecha, String estado,
                            UsuarioResponse usuario,
                            VehiculoResponse vehiculo,
                            EspacioResponse espacio,
-                           String canceladoPor) {
+                           String canceladoPor,
+                           LocalDateTime horaInicio,
+                           LocalDateTime horaFin,
+                           BigDecimal costoTotal) {
         this.id = id;
         this.fecha = fecha;
         this.estado = estado;
@@ -26,6 +34,9 @@ public class ReservaResponse {
         this.vehiculo = vehiculo;
         this.espacio = espacio;
         this.canceladoPor = canceladoPor;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+        this.costoTotal = costoTotal;
     }
 
     public static ReservaResponse fromReserva(Reserva reserva) {
@@ -36,7 +47,10 @@ public class ReservaResponse {
                 UsuarioResponse.fromUsuario(reserva.getUsuario()),
                 VehiculoResponse.fromVehiculo(reserva.getVehiculo()),
                 reserva.getEspacio() == null ? null : EspacioResponse.fromEspacio(reserva.getEspacio()),
-                reserva.getCanceladoPor()
+                reserva.getCanceladoPor(),
+                reserva.getHoraInicio(),
+                reserva.getHoraFin(),
+                reserva.getCostoTotal()
         );
     }
 
@@ -66,5 +80,17 @@ public class ReservaResponse {
 
     public String getCanceladoPor() {
         return canceladoPor;
+    }
+
+    public LocalDateTime getHoraInicio() {
+        return horaInicio;
+    }
+
+    public LocalDateTime getHoraFin() {
+        return horaFin;
+    }
+
+    public BigDecimal getCostoTotal() {
+        return costoTotal;
     }
 }

@@ -12,12 +12,17 @@ import com.smartparking.backend.repository.EspacioRepository;
 import com.smartparking.backend.repository.ReservaRepository;
 import com.smartparking.backend.repository.UsuarioRepository;
 import com.smartparking.backend.repository.VehiculoRepository;
+import com.smartparking.backend.service.ConfiguracionService;
 import com.smartparking.backend.service.EspacioService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,15 +32,18 @@ public class EspacioServiceImpl implements EspacioService {
     private final ReservaRepository reservaRepository;
     private final VehiculoRepository vehiculoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ConfiguracionService configuracionService;
 
     public EspacioServiceImpl(EspacioRepository espacioRepository,
                               ReservaRepository reservaRepository,
                               VehiculoRepository vehiculoRepository,
-                              UsuarioRepository usuarioRepository) {
+                              UsuarioRepository usuarioRepository,
+                              ConfiguracionService configuracionService) {
         this.espacioRepository = espacioRepository;
         this.reservaRepository = reservaRepository;
         this.vehiculoRepository = vehiculoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.configuracionService = configuracionService;
     }
 
     @Override
@@ -122,6 +130,8 @@ public class EspacioServiceImpl implements EspacioService {
 
             for (Reserva reserva : reservasActivas) {
                 reserva.setEstado(EstadoReserva.FINALIZADA);
+                reserva.setHoraFin(LocalDateTime.now());
+                calcularCosto(reserva);
                 reservaRepository.save(reserva);
             }
         }
@@ -182,6 +192,19 @@ public class EspacioServiceImpl implements EspacioService {
 
     private String normalizarNumero(String numero) {
         return numero.trim().toUpperCase();
+    }
+
+    private void calcularCosto(Reserva reserva) {
+        if (reserva.getHoraInicio() == null || reserva.getHoraFin() == null) {
+            return;
+        }
+
+        long minutos = Duration.between(reserva.getHoraInicio(), reserva.getHoraFin()).toMinutes();
+        long horas = (long) Math.ceil(minutos / 60.0);
+
+        BigDecimal tarifa = configuracionService.getTarifaPorHora();
+        BigDecimal costo = tarifa.multiply(BigDecimal.valueOf(horas)).setScale(2, RoundingMode.HALF_UP);
+        reserva.setCostoTotal(costo);
     }
 
     private Usuario obtenerUsuarioAutenticado() {
