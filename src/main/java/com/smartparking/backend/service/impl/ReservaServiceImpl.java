@@ -12,13 +12,18 @@ import com.smartparking.backend.repository.EspacioRepository;
 import com.smartparking.backend.repository.ReservaRepository;
 import com.smartparking.backend.repository.UsuarioRepository;
 import com.smartparking.backend.repository.VehiculoRepository;
+import com.smartparking.backend.service.ConfiguracionService;
 import com.smartparking.backend.service.ReservaService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,15 +33,18 @@ public class ReservaServiceImpl implements ReservaService {
     private final UsuarioRepository usuarioRepository;
     private final VehiculoRepository vehiculoRepository;
     private final EspacioRepository espacioRepository;
+    private final ConfiguracionService configuracionService;
 
     public ReservaServiceImpl(ReservaRepository reservaRepository,
                               UsuarioRepository usuarioRepository,
                               VehiculoRepository vehiculoRepository,
-                              EspacioRepository espacioRepository) {
+                              EspacioRepository espacioRepository,
+                              ConfiguracionService configuracionService) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.vehiculoRepository = vehiculoRepository;
         this.espacioRepository = espacioRepository;
+        this.configuracionService = configuracionService;
     }
 
     @Override
@@ -162,6 +170,7 @@ public class ReservaServiceImpl implements ReservaService {
         }
 
         reserva.setEstado(EstadoReserva.CONFIRMADA);
+        reserva.setHoraInicio(LocalDateTime.now());
         espacio.setEstado(EstadoEspacio.OCUPADO);
         espacio.setVehiculo(vehiculo);
         espacioRepository.save(espacio);
@@ -214,6 +223,8 @@ public class ReservaServiceImpl implements ReservaService {
                 espacio.setVehiculo(null);
                 espacioRepository.save(espacio);
             }
+            reserva.setHoraFin(LocalDateTime.now());
+            calcularCosto(reserva);
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
@@ -296,5 +307,18 @@ public class ReservaServiceImpl implements ReservaService {
                 .noneMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"))) {
             throw new IllegalArgumentException("Solo un administrador puede realizar esta accion");
         }
+    }
+
+    private void calcularCosto(Reserva reserva) {
+        if (reserva.getHoraInicio() == null || reserva.getHoraFin() == null) {
+            return;
+        }
+
+        long minutos = Duration.between(reserva.getHoraInicio(), reserva.getHoraFin()).toMinutes();
+        long horas = (long) Math.ceil(minutos / 60.0);
+
+        BigDecimal tarifa = configuracionService.getTarifaPorHora();
+        BigDecimal costo = tarifa.multiply(BigDecimal.valueOf(horas)).setScale(2, RoundingMode.HALF_UP);
+        reserva.setCostoTotal(costo);
     }
 }

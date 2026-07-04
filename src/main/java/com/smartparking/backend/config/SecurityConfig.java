@@ -56,6 +56,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/reservas/pendientes").hasRole("ADMIN")
                         .requestMatchers("/api/reservas/*/aprobar").hasRole("ADMIN")
                         .requestMatchers("/api/reservas/*/rechazar").hasRole("ADMIN")
+                        // Configuracion: solo ADMIN puede actualizar la tarifa
+                        .requestMatchers(HttpMethod.PUT, "/api/configuracion/tarifa").hasRole("ADMIN")
                         .requestMatchers("/auth/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()

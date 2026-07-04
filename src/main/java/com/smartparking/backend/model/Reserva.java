@@ -2,7 +2,9 @@ package com.smartparking.backend.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Reserva {
@@ -29,6 +31,10 @@ public class Reserva {
     private Espacio espacio;
 
     private String canceladoPor;
+
+    private LocalDateTime horaInicio;
+    private LocalDateTime horaFin;
+    private BigDecimal costoTotal;
 
     public Long getId() {
         return id;
@@ -84,5 +90,29 @@ public class Reserva {
 
     public void setCanceladoPor(String canceladoPor) {
         this.canceladoPor = canceladoPor;
+    }
+
+    public LocalDateTime getHoraInicio() {
+        return horaInicio;
+    }
+
+    public void setHoraInicio(LocalDateTime horaInicio) {
+        this.horaInicio = horaInicio;
+    }
+
+    public LocalDateTime getHoraFin() {
+        return horaFin;
+    }
+
+    public void setHoraFin(LocalDateTime horaFin) {
+        this.horaFin = horaFin;
+    }
+
+    public BigDecimal getCostoTotal() {
+        return costoTotal;
+    }
+
+    public void setCostoTotal(BigDecimal costoTotal) {
+        this.costoTotal = costoTotal;
     }
 }

@@ -15,6 +15,7 @@ import com.smartparking.backend.repository.EspacioRepository;
 import com.smartparking.backend.repository.ReservaRepository;
 import com.smartparking.backend.repository.UsuarioRepository;
 import com.smartparking.backend.repository.VehiculoRepository;
+import com.smartparking.backend.service.impl.ConfiguracionServiceImpl;
 import com.smartparking.backend.service.impl.ReservaServiceImpl;
 import com.smartparking.backend.service.impl.VehiculoServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -25,12 +26,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -87,11 +89,13 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
                 reservaRepository,
                 usuarioRepository,
                 vehiculoRepository,
-                espacioRepository
+                espacioRepository,
+                configuracionService
         );
 
         Usuario usuarioAutenticado = new Usuario();
@@ -136,8 +140,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuarioAutenticado = new Usuario();
@@ -185,8 +190,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -230,13 +236,66 @@ class BusinessRulesTest {
     }
 
     @Test
+    void aprobarReserva_debeEstablecerHoraInicio() {
+        ReservaRepository reservaRepository = mock(ReservaRepository.class);
+        UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+        VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
+        EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
+        ReservaServiceImpl service = new ReservaServiceImpl(
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
+        );
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setNombre("Test User");
+        usuario.setEmail("test@test.com");
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setId(20L);
+        vehiculo.setUsuario(usuario);
+
+        Espacio espacio = new Espacio();
+        espacio.setId(30L);
+        espacio.setEstado(EstadoEspacio.LIBRE);
+        espacio.setVehiculo(null);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(100L);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setUsuario(usuario);
+        reserva.setVehiculo(vehiculo);
+        reserva.setEspacio(espacio);
+
+        when(reservaRepository.findById(100L)).thenReturn(Optional.of(reserva));
+        when(espacioRepository.vehiculoTieneEspacio(20L)).thenReturn(false);
+        when(reservaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(espacioRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "admin@test.com",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
+        );
+
+        service.aprobar(100L);
+
+        assertNotNull(reserva.getHoraInicio(), "La hora de inicio debe establecerse al aprobar la reserva");
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
     void rechazarReserva_debeCambiarEstadoACancelada() {
         ReservaRepository reservaRepository = mock(ReservaRepository.class);
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -278,8 +337,9 @@ class BusinessRulesTest {
             UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
             VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
             EspacioRepository espacioRepository = mock(EspacioRepository.class);
+            ConfiguracionService configuracionService = mock(ConfiguracionService.class);
             ReservaServiceImpl service = new ReservaServiceImpl(
-                    reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                    reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
             );
 
             service.cambiarEstado(1L, "INVALIDO");
@@ -292,8 +352,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -340,8 +401,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -387,13 +449,124 @@ class BusinessRulesTest {
     }
 
     @Test
+    void user_CancelarPropiaReservaConfirmada_debeCalcularCostoTotal() {
+        ReservaRepository reservaRepository = mock(ReservaRepository.class);
+        UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+        VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
+        EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
+        ReservaServiceImpl service = new ReservaServiceImpl(
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
+        );
+
+        when(configuracionService.getTarifaPorHora()).thenReturn(new BigDecimal("2.00"));
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setNombre("User");
+        usuario.setEmail("user@test.com");
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setId(10L);
+        vehiculo.setUsuario(usuario);
+
+        Espacio espacio = new Espacio();
+        espacio.setId(20L);
+        espacio.setEstado(EstadoEspacio.OCUPADO);
+        espacio.setVehiculo(vehiculo);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(100L);
+        reserva.setEstado(EstadoReserva.CONFIRMADA);
+        reserva.setUsuario(usuario);
+        reserva.setVehiculo(vehiculo);
+        reserva.setEspacio(espacio);
+        reserva.setHoraInicio(LocalDateTime.now().minusHours(3));
+
+        when(usuarioRepository.findByEmail("user@test.com")).thenReturn(Optional.of(usuario));
+        when(reservaRepository.findById(100L)).thenReturn(Optional.of(reserva));
+        when(reservaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(espacioRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "user@test.com",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                )
+        );
+
+        ReservaResponse response = service.cancelarPorUsuario(100L);
+
+        assertEquals("CANCELADA", response.getEstado());
+        assertNotNull(response.getCostoTotal(), "El costo total debe calcularse al cancelar una reserva confirmada");
+        assertTrue(response.getCostoTotal().compareTo(BigDecimal.ZERO) > 0, "El costo debe ser mayor a cero");
+        assertEquals(0, new BigDecimal("6.00").compareTo(response.getCostoTotal()),
+                "3 horas a $2.00 = $6.00 (redondeo hacia arriba)");
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void user_CancelarReservaPendiente_debeTenerCostoTotalNulo() {
+        ReservaRepository reservaRepository = mock(ReservaRepository.class);
+        UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+        VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
+        EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
+        ReservaServiceImpl service = new ReservaServiceImpl(
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
+        );
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setNombre("User");
+        usuario.setEmail("user@test.com");
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setId(10L);
+        vehiculo.setUsuario(usuario);
+
+        Espacio espacio = new Espacio();
+        espacio.setId(20L);
+        espacio.setEstado(EstadoEspacio.LIBRE);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(100L);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setUsuario(usuario);
+        reserva.setVehiculo(vehiculo);
+        reserva.setEspacio(espacio);
+
+        when(usuarioRepository.findByEmail("user@test.com")).thenReturn(Optional.of(usuario));
+        when(reservaRepository.findById(100L)).thenReturn(Optional.of(reserva));
+        when(reservaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "user@test.com",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                )
+        );
+
+        ReservaResponse response = service.cancelarPorUsuario(100L);
+
+        assertEquals("CANCELADA", response.getEstado());
+        assertNull(response.getCostoTotal(), "Una reserva pendiente cancelada no debe tener costo");
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
     void user_CancelarReservaDeOtroUsuario_debeLanzarExcepcion() {
         ReservaRepository reservaRepository = mock(ReservaRepository.class);
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario propietario = new Usuario();
@@ -430,8 +603,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -465,8 +639,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario propietario = new Usuario();
@@ -549,8 +724,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
@@ -589,8 +765,9 @@ class BusinessRulesTest {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         VehiculoRepository vehiculoRepository = mock(VehiculoRepository.class);
         EspacioRepository espacioRepository = mock(EspacioRepository.class);
+        ConfiguracionService configuracionService = mock(ConfiguracionService.class);
         ReservaServiceImpl service = new ReservaServiceImpl(
-                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository
+                reservaRepository, usuarioRepository, vehiculoRepository, espacioRepository, configuracionService
         );
 
         Usuario usuario = new Usuario();
