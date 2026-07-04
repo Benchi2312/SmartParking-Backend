@@ -7,8 +7,6 @@ import com.smartparking.backend.dto.UsuarioResponse;
 import com.smartparking.backend.model.Usuario;
 import com.smartparking.backend.security.jwt.JwtService;
 import com.smartparking.backend.service.UsuarioService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,8 +20,6 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-
     private final UsuarioService usuarioService;
     private final JwtService jwtService;
 
@@ -36,7 +32,6 @@ public class AuthController {
     //  REGISTER
     @PostMapping("/register")
     public UsuarioResponse register(@RequestBody RegisterRequest request) {
-        log.info("Register request recibido: {}", request);
         Usuario usuario = usuarioService.registrar(request);
         return UsuarioResponse.fromUsuario(usuario);
     }

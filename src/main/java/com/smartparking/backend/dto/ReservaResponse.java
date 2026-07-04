@@ -12,17 +12,20 @@ public class ReservaResponse {
     private UsuarioResponse usuario;
     private VehiculoResponse vehiculo;
     private EspacioResponse espacio;
+    private String canceladoPor;
 
     public ReservaResponse(Long id, LocalDate fecha, String estado,
                            UsuarioResponse usuario,
                            VehiculoResponse vehiculo,
-                           EspacioResponse espacio) {
+                           EspacioResponse espacio,
+                           String canceladoPor) {
         this.id = id;
         this.fecha = fecha;
         this.estado = estado;
         this.usuario = usuario;
         this.vehiculo = vehiculo;
         this.espacio = espacio;
+        this.canceladoPor = canceladoPor;
     }
 
     public static ReservaResponse fromReserva(Reserva reserva) {
@@ -32,7 +35,8 @@ public class ReservaResponse {
                 reserva.getEstado().name(),
                 UsuarioResponse.fromUsuario(reserva.getUsuario()),
                 VehiculoResponse.fromVehiculo(reserva.getVehiculo()),
-                reserva.getEspacio() == null ? null : EspacioResponse.fromEspacio(reserva.getEspacio())
+                reserva.getEspacio() == null ? null : EspacioResponse.fromEspacio(reserva.getEspacio()),
+                reserva.getCanceladoPor()
         );
     }
 
@@ -58,5 +62,9 @@ public class ReservaResponse {
 
     public EspacioResponse getEspacio() {
         return espacio;
+    }
+
+    public String getCanceladoPor() {
+        return canceladoPor;
     }
 }

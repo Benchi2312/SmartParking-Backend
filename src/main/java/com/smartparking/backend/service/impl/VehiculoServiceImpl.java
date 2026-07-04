@@ -67,10 +67,7 @@ public class VehiculoServiceImpl implements VehiculoService {
             throw new IllegalArgumentException("Ya existe un vehiculo registrado con esa placa");
         }
 
-        Long usuarioId = request.getUsuarioId() != null ? request.getUsuarioId() : obtenerUsuarioAutenticado().getId();
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = obtenerUsuarioAutenticado();
 
         Vehiculo vehiculo = new Vehiculo();
         vehiculo.setMarca(request.getMarca().trim());

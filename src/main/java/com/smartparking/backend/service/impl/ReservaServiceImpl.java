@@ -123,9 +123,9 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ReservaResponse cambiarEstado(Long id, String estado) {
-        String estadoNormalizado = normalizarEstadoAdmin(estado);
-        if (estadoNormalizado.equals("CONFIRMADA")) {
+    public ReservaResponse cambiarEstado(Long id, String estadoStr) {
+        EstadoReserva estado = convertirEstado(estadoStr);
+        if (estado == EstadoReserva.CONFIRMADA) {
             return aprobar(id);
         }
 
@@ -185,7 +185,56 @@ public class ReservaServiceImpl implements ReservaService {
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
+        reserva.setCanceladoPor("ADMIN");
         return ReservaResponse.fromReserva(reservaRepository.save(reserva));
+    }
+
+    @Override
+    @Transactional
+    public ReservaResponse cancelarPorUsuario(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El id de la reserva es obligatorio");
+        }
+
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        validarOwnership(reserva);
+
+        if (reserva.getEstado() == EstadoReserva.CANCELADA || reserva.getEstado() == EstadoReserva.FINALIZADA) {
+            throw new IllegalArgumentException(
+                    "No se puede cancelar una reserva en estado " + reserva.getEstado().name().toLowerCase()
+            );
+        }
+
+        if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+            Espacio espacio = reserva.getEspacio();
+            if (espacio != null) {
+                espacio.setEstado(EstadoEspacio.LIBRE);
+                espacio.setVehiculo(null);
+                espacioRepository.save(espacio);
+            }
+        }
+
+        reserva.setEstado(EstadoReserva.CANCELADA);
+        reserva.setCanceladoPor("USUARIO");
+        return ReservaResponse.fromReserva(reservaRepository.save(reserva));
+    }
+
+    private void validarOwnership(Reserva reserva) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean esAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (esAdmin) {
+            return;
+        }
+
+        Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        if (!reserva.getUsuario().getId().equals(usuarioAutenticado.getId())) {
+            throw new IllegalArgumentException("No tienes permiso para cancelar esta reserva");
+        }
     }
 
     private void validarCreacion(ReservaRequest request) {
@@ -210,17 +259,23 @@ public class ReservaServiceImpl implements ReservaService {
         }
     }
 
-    private String normalizarEstadoAdmin(String estado) {
-        if (estado == null || estado.trim().isEmpty()) {
+    private EstadoReserva convertirEstado(String estadoStr) {
+        if (estadoStr == null || estadoStr.trim().isEmpty()) {
             throw new IllegalArgumentException("El estado de la reserva es obligatorio");
         }
 
-        String estadoNormalizado = estado.trim().toUpperCase();
-        if (!estadoNormalizado.equals("CONFIRMADA") && !estadoNormalizado.equals("CANCELADA")) {
-            throw new IllegalArgumentException("El administrador solo puede cambiar la reserva a CONFIRMADA o CANCELADA");
+        try {
+            EstadoReserva estado = EstadoReserva.valueOf(estadoStr.trim().toUpperCase());
+            if (estado == EstadoReserva.CONFIRMADA || estado == EstadoReserva.CANCELADA) {
+                return estado;
+            }
+        } catch (IllegalArgumentException e) {
+            // valueOf no encontro una constante coincide
         }
 
-        return estadoNormalizado;
+        throw new IllegalArgumentException(
+                "Estado invalido: '" + estadoStr + "'. El administrador solo puede cambiar la reserva a CONFIRMADA o CANCELADA"
+        );
     }
 
     private Usuario obtenerUsuarioAutenticado() {

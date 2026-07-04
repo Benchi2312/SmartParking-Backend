@@ -28,6 +28,8 @@ public class Reserva {
     @JoinColumn(name = "espacio_id")
     private Espacio espacio;
 
+    private String canceladoPor;
+
     public Long getId() {
         return id;
     }
@@ -74,5 +76,13 @@ public class Reserva {
 
     public void setEspacio(Espacio espacio) {
         this.espacio = espacio;
+    }
+
+    public String getCanceladoPor() {
+        return canceladoPor;
+    }
+
+    public void setCanceladoPor(String canceladoPor) {
+        this.canceladoPor = canceladoPor;
     }
 }

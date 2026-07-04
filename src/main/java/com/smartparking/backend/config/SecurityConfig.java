@@ -48,6 +48,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/espacios/*/liberar").hasRole("ADMIN")
                         // Gestion de usuarios: solo ADMIN puede listar todos
                         .requestMatchers("/api/auth/usuarios").hasRole("ADMIN")
+                        // Vehiculos: solo ADMIN puede listar todos los vehiculos (USER usa /mis-vehiculos)
+                        .requestMatchers(HttpMethod.GET, "/api/vehiculos").hasRole("ADMIN")
+                        // Reservas: solo ADMIN puede listar todas las reservas (USER usa /mis-reservas)
+                        .requestMatchers(HttpMethod.GET, "/api/reservas").hasRole("ADMIN")
                         // Reservas: solo ADMIN puede ver pendientes, aprobar o rechazar
                         .requestMatchers("/api/reservas/pendientes").hasRole("ADMIN")
                         .requestMatchers("/api/reservas/*/aprobar").hasRole("ADMIN")

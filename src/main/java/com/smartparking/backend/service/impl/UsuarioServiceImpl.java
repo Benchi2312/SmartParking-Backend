@@ -4,8 +4,6 @@ import com.smartparking.backend.dto.RegisterRequest;
 import com.smartparking.backend.model.Usuario;
 import com.smartparking.backend.repository.UsuarioRepository;
 import com.smartparking.backend.service.UsuarioService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +11,6 @@ import java.util.List;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
-
-    private static final Logger log = LoggerFactory.getLogger(UsuarioServiceImpl.class);
 
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -29,26 +25,17 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario registrar(RegisterRequest request) {
         validarRegistro(request);
 
-        log.info("Password recibido DTO: {}", request.getPassword() == null ? "NULL" : "PRESENTE");
-
-        //  Validar si ya existe
         if (usuarioRepository.findByEmail(request.getEmail().trim()).isPresent()) {
             throw new RuntimeException("Correo ya registrado");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        log.info("Password encoded: {}", encodedPassword == null ? "NULL" : "GENERADO");
 
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre().trim());
         usuario.setEmail(request.getEmail().trim());
         usuario.setPassword(encodedPassword);
         usuario.setRol("USER");
-
-        log.info("Usuario antes de guardar: email={}, rol={}, passwordPresente={}",
-                usuario.getEmail(),
-                usuario.getRol(),
-                usuario.getPassword() != null && !usuario.getPassword().isBlank());
 
         return usuarioRepository.save(usuario);
     }

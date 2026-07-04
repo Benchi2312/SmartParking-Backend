@@ -61,4 +61,9 @@ public class ReservaController {
     public ReservaResponse rechazar(@PathVariable Long id) {
         return reservaService.rechazar(id);
     }
+
+    @PostMapping("/{id}/cancelar")
+    public ReservaResponse cancelar(@PathVariable Long id) {
+        return reservaService.cancelarPorUsuario(id);
+    }
 }

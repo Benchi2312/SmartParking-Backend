@@ -27,4 +27,7 @@ public interface EspacioRepository extends JpaRepository<Espacio, Long> {
 
     @Query("SELECT COUNT(e) > 0 FROM Espacio e WHERE e.vehiculo.id = :vehiculoId AND e.id <> :espacioId")
     boolean vehiculoTieneOtroEspacio(@Param("vehiculoId") Long vehiculoId, @Param("espacioId") Long espacioId);
+
+    @Query("SELECT e FROM Espacio e LEFT JOIN FETCH e.vehiculo v LEFT JOIN FETCH v.usuario WHERE v.usuario.id = :usuarioId ORDER BY e.numero ASC")
+    List<Espacio> listarPorUsuarioId(@Param("usuarioId") Long usuarioId);
 }

@@ -5,7 +5,6 @@ public class VehiculoRequest {
     private String marca;
     private String modelo;
     private String placa;
-    private Long usuarioId;
 
     public String getMarca() {
         return marca;
@@ -29,13 +28,5 @@ public class VehiculoRequest {
 
     public void setPlaca(String placa) {
         this.placa = placa;
-    }
-
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
     }
 }
