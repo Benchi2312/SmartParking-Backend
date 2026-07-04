@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,9 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Clave de firma para la exposicion universitaria. En produccion debe vivir en variables de entorno.
-    private static final String SECRET_KEY = "smart-parking-jwt-secret-key-for-university-demo-2026";
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
     private static final long EXPIRATION_MILLISECONDS = 1000 * 60 * 60 * 8;
 
     public String generateToken(UserDetails userDetails) {
@@ -73,7 +75,7 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
