@@ -15,4 +15,5 @@ public interface ReservaService {
     ReservaResponse aprobar(Long id);
     ReservaResponse rechazar(Long id);
     ReservaResponse obtenerUltimaReserva();
+    ReservaResponse cancelarPorUsuario(Long id);
 }

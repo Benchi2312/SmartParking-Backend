@@ -6,11 +6,15 @@ import com.smartparking.backend.model.Espacio;
 import com.smartparking.backend.model.EstadoEspacio;
 import com.smartparking.backend.model.EstadoReserva;
 import com.smartparking.backend.model.Reserva;
+import com.smartparking.backend.model.Usuario;
 import com.smartparking.backend.model.Vehiculo;
 import com.smartparking.backend.repository.EspacioRepository;
 import com.smartparking.backend.repository.ReservaRepository;
+import com.smartparking.backend.repository.UsuarioRepository;
 import com.smartparking.backend.repository.VehiculoRepository;
 import com.smartparking.backend.service.EspacioService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,18 +26,30 @@ public class EspacioServiceImpl implements EspacioService {
     private final EspacioRepository espacioRepository;
     private final ReservaRepository reservaRepository;
     private final VehiculoRepository vehiculoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public EspacioServiceImpl(EspacioRepository espacioRepository,
                               ReservaRepository reservaRepository,
-                              VehiculoRepository vehiculoRepository) {
+                              VehiculoRepository vehiculoRepository,
+                              UsuarioRepository usuarioRepository) {
         this.espacioRepository = espacioRepository;
         this.reservaRepository = reservaRepository;
         this.vehiculoRepository = vehiculoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
     public List<EspacioResponse> listarTodos() {
         return espacioRepository.listarTodosConVehiculo()
+                .stream()
+                .map(EspacioResponse::fromEspacio)
+                .toList();
+    }
+
+    @Override
+    public List<EspacioResponse> listarMisEspacios() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+        return espacioRepository.listarPorUsuarioId(usuario.getId())
                 .stream()
                 .map(EspacioResponse::fromEspacio)
                 .toList();
@@ -166,5 +182,16 @@ public class EspacioServiceImpl implements EspacioService {
 
     private String normalizarNumero(String numero) {
         return numero.trim().toUpperCase();
+    }
+
+    private Usuario obtenerUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getName() == null) {
+            throw new IllegalArgumentException("No se encontro el usuario autenticado");
+        }
+
+        return usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
     }
 }

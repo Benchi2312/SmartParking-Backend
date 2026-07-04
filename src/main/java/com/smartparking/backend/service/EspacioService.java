@@ -8,6 +8,7 @@ import java.util.List;
 public interface EspacioService {
     List<EspacioResponse> listarTodos();
     List<EspacioResponse> listarDisponibles();
+    List<EspacioResponse> listarMisEspacios();
     EspacioResponse crear(EspacioRequest request);
     EspacioResponse actualizar(Long id, EspacioRequest request);
     EspacioResponse liberar(Long id);

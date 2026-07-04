@@ -29,6 +29,11 @@ public class EspacioController {
         return espacioService.listarDisponibles();
     }
 
+    @GetMapping("/mis-espacios")
+    public List<EspacioResponse> listarMisEspacios() {
+        return espacioService.listarMisEspacios();
+    }
+
     @PostMapping
     public EspacioResponse crear(@RequestBody EspacioRequest request) {
         return espacioService.crear(request);
